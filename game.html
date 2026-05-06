@@ -70,8 +70,6 @@
 </head>
 <body>
 
-  <!-- AUTH GATE — affiché immédiatement si non connecté -->
-
   <div id="auth-gate" style="display:none">
     <div class="auth-box">
       <div class="auth-logo">&#128202; Dashboard</div>
@@ -313,8 +311,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-  <!-- AUTH INLINE -->
-
   <script>
     const API = 'api.php';
 
@@ -390,7 +386,7 @@ var serverState = await window.serverLoad();
 if (serverState && window.mergeServerState) {
   window.mergeServerState(serverState);
 } else if (window.serverSave && typeof state !== 'undefined') {
-  // Première connexion : upload le localStorage existant vers le serveur
+
   window.serverSave(state);
 }
 
@@ -430,7 +426,6 @@ if (serverState && window.mergeServerState) {
       };
     }
 
-    // Lance l'auth dès que le DOM est prêt
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', function() {
         if (session.isLoggedIn()) { showUserBar(); } else { showAuthGate(); }
