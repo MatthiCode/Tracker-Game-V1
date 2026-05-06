@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Personnel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    #auth-gate {
+      position: fixed; inset: 0;
+      background: #0f0f0f;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    [data-theme="light"] #auth-gate { background: #f5f5f5; }
+    .auth-box {
+      background: #1a1a1a;
+      border: 2px solid #2a2a2a;
+      border-radius: 16px;
+      padding: 2rem;
+      width: min(90vw, 380px);
+      box-shadow: 6px 6px 0 #2a2a2a;
+    }
+    [data-theme="light"] .auth-box { background: #fff; border-color: #e0e0e0; box-shadow: 6px 6px 0 #e0e0e0; }
+    .auth-logo { font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem; color: #e0e0e0; }
+    [data-theme="light"] .auth-logo { color: #111; }
+    .auth-tabs { display: flex; gap: .5rem; margin-bottom: 1.5rem; }
+    .auth-tab {
+      flex: 1; padding: .5rem; border-radius: 8px;
+      border: 1.5px solid #2a2a2a;
+      background: transparent; color: #e0e0e0;
+      cursor: pointer; font-size: .875rem; font-weight: 600;
+      font-family: inherit; transition: .15s;
+    }
+    [data-theme="light"] .auth-tab { border-color: #e0e0e0; color: #111; }
+    .auth-tab.active { background: #7c83fd; color: #fff; border-color: #7c83fd; }
+    .auth-field { display: flex; flex-direction: column; gap: .375rem; margin-bottom: 1rem; }
+    .auth-field label { font-size: .72rem; font-weight: 700; color: #888; text-transform: uppercase; letter-spacing: .05em; }
+    .auth-field input {
+      background: #0f0f0f; border: 1.5px solid #2a2a2a;
+      border-radius: 8px; padding: .625rem .875rem;
+      color: #e0e0e0; font-family: inherit; font-size: .9rem; outline: none;
+      transition: border-color .15s;
+    }
+    [data-theme="light"] .auth-field input { background: #f5f5f5; border-color: #e0e0e0; color: #111; }
+    .auth-field input:focus { border-color: #7c83fd; }
+    .auth-submit {
+      width: 100%; padding: .7rem; border-radius: 8px;
+      background: #7c83fd; color: #fff; border: none;
+      font-family: inherit; font-size: .9rem; font-weight: 700;
+      cursor: pointer; margin-top: .25rem; transition: opacity .15s;
+    }
+    .auth-submit:hover { opacity: .88; }
+    .auth-error { font-size: .8rem; color: #f87171; margin-top: .5rem; min-height: 1.2em; }
+    .auth-skip { font-size: .75rem; color: #888; text-align: center; margin-top: 1rem; cursor: pointer; }
+    .auth-skip:hover { color: #e0e0e0; }
+    #user-bar { padding: .75rem .875rem; border-bottom: 1px solid #2a2a2a; margin-bottom: .25rem; }
+    .user-bar-name { font-size: .8rem; font-weight: 700; color: #e0e0e0; margin-bottom: .375rem; }
+    .user-bar-btn {
+      font-size: .7rem; padding: .25rem .5rem; border-radius: 5px;
+      border: 1.5px solid #2a2a2a; background: transparent; color: #888;
+      cursor: pointer; font-family: inherit; transition: .15s;
+    }
+    .user-bar-btn:hover { border-color: #f87171; color: #f87171; }
+  </style>
+</head>
+<body>
+
+  <!-- AUTH GATE — affiché immédiatement si non connecté -->
+
+  <div id="auth-gate" style="display:none">
+    <div class="auth-box">
+      <div class="auth-logo">&#128202; Dashboard</div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login">Connexion</button>
+        <button class="auth-tab" id="tab-register">Inscription</button>
+      </div>
+      <div id="form-login">
+        <div class="auth-field">
+          <label>Email</label>
+          <input type="email" id="auth-email-l" placeholder="ton@email.com" />
+        </div>
+        <div class="auth-field">
+          <label>Mot de passe</label>
+          <input type="password" id="auth-pass-l" placeholder="••••••" />
+        </div>
+        <button class="auth-submit" id="btn-login">Se connecter</button>
+        <div class="auth-error" id="err-login"></div>
+        <div class="auth-skip" id="auth-skip">Continuer sans compte &#8594;</div>
+      </div>
+      <div id="form-register" style="display:none">
+        <div class="auth-field">
+          <label>Pseudo</label>
+          <input type="text" id="auth-user-r" placeholder="monpseudo" maxlength="30" />
+        </div>
+        <div class="auth-field">
+          <label>Email</label>
+          <input type="email" id="auth-email-r" placeholder="ton@email.com" />
+        </div>
+        <div class="auth-field">
+          <label>Mot de passe</label>
+          <input type="password" id="auth-pass-r" placeholder="min. 6 caracteres" />
+        </div>
+        <button class="auth-submit" id="btn-register">Creer mon compte</button>
+        <div class="auth-error" id="err-register"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-shell">
+    <aside class="sidebar">
+      <nav class="sidebar-nav">
+        <button class="sidebar-btn" id="btn-edit-layout" title="Layout">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          <span>Layout</span>
+        </button>
+        <button class="sidebar-btn" id="btn-import" title="Importer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Importer</span>
+        </button>
+        <button class="sidebar-btn" id="btn-export" title="Exporter">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Exporter</span>
+        </button>
+        <button class="sidebar-btn" id="btn-ranks" title="Rangs">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>Rangs</span>
+        </button>
+        <button class="sidebar-btn" id="btn-friends" title="Amis">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          <span>Amis</span>
+          <span id="friends-notif-badge" style="position:absolute;top:4px;right:4px;display:none;align-items:center;justify-content:center;background:#f87171;color:#fff;font-size:.55rem;font-weight:700;width:14px;height:14px;border-radius:50%;line-height:1"></span>
+        </button>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="sidebar-btn" id="btn-theme" title="Theme">
+          <svg class="moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg class="sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <span>Theme</span>
+        </button>
+        <span class="sidebar-date" id="header-date"></span>
+      </div>
+    </aside>
+<main class="grid-main">
+  <section class="card card-objectives" aria-label="Objectifs">
+    <div class="card-header">
+      <h2 class="card-title">Tes objectifs</h2>
+      <button class="btn-add-task" id="btn-open-modal">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Ajouter
+      </button>
+    </div>
+    <div class="objectives-grid">
+      <div class="obj-col"><h3 class="obj-col-title">Journalier</h3><ul class="task-list" id="tasks-daily"></ul></div>
+      <div class="obj-col"><h3 class="obj-col-title">Hebdomadaire</h3><ul class="task-list" id="tasks-weekly"></ul></div>
+      <div class="obj-col"><h3 class="obj-col-title">Mensuel</h3><ul class="task-list" id="tasks-monthly"></ul></div>
+    </div>
+  </section>
+
+  <section class="card card-radar" aria-label="Radar de competences">
+    <div class="card-header">
+      <h2 class="card-title">Radar de competences</h2>
+      <span class="radar-total-label">Total <strong id="radar-total-pts">0</strong> pts</span>
+    </div>
+    <div class="radar-wrap"><canvas id="radar-canvas"></canvas></div>
+    <div class="radar-hint">Double-clic sur un label pour le renommer</div>
+    <div class="radar-scores" id="radar-scores"></div>
+  </section>
+
+  <section class="card card-tracking" aria-label="Tracking mensuel">
+    <div class="card-header">
+      <h2 class="card-title">Tracking</h2>
+      <span class="tracking-month" id="tracking-month"></span>
+    </div>
+    <div class="tracking-hint">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Le tracking est automatique
+    </div>
+    <div class="tracking-wrap">
+      <div class="tracking-grid" id="tracking-grid">
+        <div class="track-header"></div>
+        <div class="track-header">L</div><div class="track-header">M</div>
+        <div class="track-header">M</div><div class="track-header">J</div>
+        <div class="track-header">V</div><div class="track-header">S</div>
+        <div class="track-header">D</div>
+      </div>
+    </div>
+    <div class="tracking-legend">
+      <span class="track-legend-item"><span class="track-swatch inactive"></span>Inactif</span>
+      <span class="track-legend-item"><span class="track-swatch low"></span>Peu actif</span>
+      <span class="track-legend-item"><span class="track-swatch high"></span>Tres actif</span>
+    </div>
+  </section>
+
+  <section class="card card-projects" aria-label="Projets">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">Projets</h2>
+        <p class="projects-subtitle">Articles, notes, case studies.</p>
+      </div>
+      <button class="btn-new-project" id="btn-new-project">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nouveau projet
+      </button>
+    </div>
+    <div class="projects-list" id="projects-list"></div>
+  </section>
+
+  <section class="card card-profile" aria-label="Profil">
+    <div class="profile-avatar-wrap">
+      <div class="profile-avatar" id="avatar-preview">
+        <span id="avatar-initials">JD</span>
+        <img id="avatar-img" src="" alt="Photo profil" style="display:none;" />
+      </div>
+      <label class="avatar-edit-btn" title="Changer la photo">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+        <input type="file" id="avatar-input" accept="image/*" hidden />
+      </label>
+    </div>
+    <div class="profile-name-wrap">
+      <h2 class="profile-name" id="profile-name" contenteditable="true" spellcheck="false">John Doe</h2>
+      <span class="profile-rank" id="profile-rank">Rank E</span>
+    </div>
+    <div class="profile-bio-wrap">
+      <div class="profile-bio" id="profile-bio" contenteditable="true" spellcheck="false" data-placeholder="Ajoute une description..."></div>
+    </div>
+    <div class="profile-score-row">
+      <span class="score-label">Score moyen</span>
+      <span class="score-value" id="profile-avg-score">0</span>
+      <span class="score-max">/ 2 000</span>
+    </div>
+    <div class="profile-infos">
+      <div class="info-row"><span class="info-label">Objectif principal</span><span class="info-value" contenteditable="true" spellcheck="false" id="obj-principal">Devenir developpeur senior</span></div>
+      <div class="info-row"><span class="info-label">Objectif secondaire</span><span class="info-value" contenteditable="true" spellcheck="false" id="obj-secondaire">Lancer un projet indie</span></div>
+      <div class="info-row"><span class="info-label">Travail / Etudes</span><span class="info-value" contenteditable="true" spellcheck="false" id="profile-work">Ex: Developpeur chez Acme</span></div>
+      <div class="info-row"><span class="info-label">Passions</span><span class="info-value" contenteditable="true" spellcheck="false" id="profile-passions">Code, musique, voyage</span></div>
+      <div class="info-row"><span class="info-label">Point fort</span><span class="info-value" contenteditable="true" spellcheck="false" id="point-fort">Resolution de problemes</span></div>
+      <div class="info-row"><span class="info-label">Faiblesse</span><span class="info-value" contenteditable="true" spellcheck="false" id="faiblesse">Procrastination</span></div>
+    </div>
+    <div class="profile-follow-row">
+      <span class="follower-count-wrap"><span id="follower-count">0</span> abonnes</span>
+      <button class="btn-follow" id="btn-follow">+ Follow</button>
+    </div>
+  </section>
+</main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal-overlay" id="modal-overlay" role="dialog" aria-modal="true">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Nouvelle tache</h3>
+        <button class="modal-close" id="modal-close" aria-label="Fermer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="task-name">Nom de la tache</label>
+          <input type="text" id="task-name" class="form-input" placeholder="Ex: Mediter 10 min" maxlength="60" />
+        </div>
+        <div class="form-group">
+          <div class="form-label-row">
+            <label class="form-label" for="task-category">Categorie</label>
+            <button type="button" class="btn-rename-cat" id="btn-rename-cat">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+              Renommer
+            </button>
+          </div>
+          <select id="task-category" class="form-select">
+            <option value="mental">&#129504; Mental</option>
+            <option value="physique">&#128170; Physique</option>
+            <option value="creativite">&#127912; Creativite</option>
+            <option value="social">&#129309; Social</option>
+            <option value="savoir">&#128218; Savoir</option>
+            <option value="discipline">&#9889; Discipline</option>
+          </select>
+          <div class="cat-rename-row" id="cat-rename-row" style="display:none;">
+            <input type="text" class="form-input cat-rename-field" id="cat-rename-field" placeholder="Nouveau nom..." maxlength="30" />
+            <button type="button" class="btn-confirm-rename" id="btn-confirm-rename">OK</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="task-freq">Frequence</label>
+          <select id="task-freq" class="form-select">
+            <option value="daily">Journalier</option>
+            <option value="weekly">Hebdomadaire</option>
+            <option value="monthly">Mensuel</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="task-duration-input">Duree estimee <span class="form-label-hint">(optionnel)</span></label>
+          <input type="text" id="task-duration-input" class="form-input" placeholder="Ex: 30 min, 1h30..." maxlength="20" />
+        </div>
+        <p class="form-hint" id="modal-hint"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" id="btn-cancel">Annuler</button>
+        <button class="btn-confirm" id="btn-confirm">Ajouter</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- AUTH INLINE -->
+
+  <script>
+    const API = 'api.php';
+
+    const session = {
+      get token()    { return localStorage.getItem('dash_token'); },
+      get username() { return localStorage.getItem('dash_username'); },
+      save: function(token, username) {
+        localStorage.setItem('dash_token', token);
+        localStorage.setItem('dash_username', username);
+      },
+      clear: function() {
+        localStorage.removeItem('dash_token');
+        localStorage.removeItem('dash_username');
+      },
+      isLoggedIn: function() { return !!localStorage.getItem('dash_token'); }
+    };
+    window.session = session;
+
+    async function apiCall(action, body) {
+      body = body || {};
+      var headers = { 'Content-Type': 'application/json' };
+      var token = localStorage.getItem('dash_token');
+      if (token) headers['Authorization'] = 'Bearer ' + token;
+      var res = await fetch(API + '?action=' + action, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(Object.assign({ action: action }, body))
+      });
+      var data = await res.json();
+      if (data.error) throw new Error(data.error);
+      return data;
+    }
+    window.apiCall = apiCall;
+
+    window.serverSave = async function(stateObj) {
+      if (!session.isLoggedIn()) return;
+      try { await apiCall('save', { state: stateObj }); } catch(e) {}
+    };
+
+    window.serverLoad = async function() {
+      if (!session.isLoggedIn()) return null;
+      try { var d = await apiCall('load'); return d.state; } catch(e) { return null; }
+    };
+
+    function showAuthGate() {
+      var gate = document.getElementById('auth-gate');
+      gate.style.display = 'flex';
+
+      document.getElementById('tab-login').onclick = function() {
+        document.getElementById('tab-login').classList.add('active');
+        document.getElementById('tab-register').classList.remove('active');
+        document.getElementById('form-login').style.display = '';
+        document.getElementById('form-register').style.display = 'none';
+      };
+      document.getElementById('tab-register').onclick = function() {
+        document.getElementById('tab-register').classList.add('active');
+        document.getElementById('tab-login').classList.remove('active');
+        document.getElementById('form-register').style.display = '';
+        document.getElementById('form-login').style.display = 'none';
+      };
+
+      document.getElementById('btn-login').onclick = async function() {
+        var email = document.getElementById('auth-email-l').value.trim();
+        var pass  = document.getElementById('auth-pass-l').value;
+        var errEl = document.getElementById('err-login');
+        try {
+          errEl.textContent = 'Connexion...';
+          var data = await apiCall('login', { email: email, password: pass });
+          session.save(data.token, data.username);
+          gate.style.display = 'none';
+showUserBar();
+var serverState = await window.serverLoad();
+if (serverState && window.mergeServerState) {
+  window.mergeServerState(serverState);
+} else if (window.serverSave && typeof state !== 'undefined') {
+  // Première connexion : upload le localStorage existant vers le serveur
+  window.serverSave(state);
+}
+
+        } catch(e) { errEl.textContent = e.message; }
+      };
+
+      document.getElementById('btn-register').onclick = async function() {
+        var username = document.getElementById('auth-user-r').value.trim();
+        var email    = document.getElementById('auth-email-r').value.trim();
+        var pass     = document.getElementById('auth-pass-r').value;
+        var errEl    = document.getElementById('err-register');
+        try {
+          errEl.textContent = 'Creation...';
+          var data = await apiCall('register', { username: username, email: email, password: pass });
+          session.save(data.token, data.username);
+          gate.style.display = 'none';
+          showUserBar();
+        } catch(e) { errEl.textContent = e.message; }
+      };
+
+      document.getElementById('auth-skip').onclick = function() {
+        window._skipAuth = true;
+        gate.style.display = 'none';
+      };
+    }
+
+    function showUserBar() {
+      var nav = document.querySelector('.sidebar-nav');
+      if (!nav || document.getElementById('user-bar')) return;
+      var bar = document.createElement('div');
+      bar.id = 'user-bar';
+      bar.innerHTML = '<div class="user-bar-name">@' + (session.username || '') + '</div>' +
+        '<button class="user-bar-btn" id="btn-logout">Deconnexion</button>';
+      nav.prepend(bar);
+      document.getElementById('btn-logout').onclick = function() {
+        if (confirm('Se deconnecter ?')) { session.clear(); location.reload(); }
+      };
+    }
+
+    // Lance l'auth dès que le DOM est prêt
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() {
+        if (session.isLoggedIn()) { showUserBar(); } else { showAuthGate(); }
+      });
+    } else {
+      if (session.isLoggedIn()) { showUserBar(); } else { showAuthGate(); }
+    }
+  </script>
+
+  <script src="app.js"></script>
+  <script src="friends.js"></script>
+</body>
+</html>
